@@ -194,6 +194,7 @@ namespace NTRIP
             bool preamableFound = false;
             List<byte> messageBytes = new List<byte>();
             int messageLength = Int32.MaxValue;
+            Queue<byte> byteStream = new Queue<byte>();
             while (!_serviceWorkThreadStop)
             {
                 if (!_serverConnectionAvailable)
@@ -202,28 +203,31 @@ namespace NTRIP
                     continue;
                 }
                 else
-                    Thread.Sleep(20);
+                    Thread.Sleep(0);
 
                 try
                 {
-                    NetworkStream stream = _tcpClient.GetStream();
+                    byte[] buffer = new byte[1024];
+                    int bytesReceived = _tcpClient.GetStream().Read(buffer, 0, buffer.Length);
+                    for (int i = 0; i < bytesReceived; i++)
+                        byteStream.Enqueue(buffer[i]);
                     switch(_gnssStream)
                     {
                         case GNSSStream.RTCM:
                             if(preamableFound)
                             {
-                                if(messageBytes.Count < 3 && stream.DataAvailable)
+                                if(messageBytes.Count < 3 && byteStream.Count > 2)
                                 {
                                     messageBytes.Add(HeaderUtil.RTCM_PREAMBLE);
-                                    messageBytes.Add((byte)stream.ReadByte());
-                                    messageBytes.Add((byte)stream.ReadByte());
+                                    messageBytes.Add(byteStream.Dequeue());
+                                    messageBytes.Add(byteStream.Dequeue());
                                     messageLength = (int)BitUtil.GetUnsigned(messageBytes.ToArray(), 14, 10);
                                 }
 
-                                if(messageBytes.Count < messageLength + 6)
+                                if(messageBytes.Count < messageLength + 6 && messageBytes.Count > 2)
                                 {
-                                    if(stream.DataAvailable)
-                                        messageBytes.Add((byte)stream.ReadByte());
+                                    if (byteStream.Count > 2)
+                                        messageBytes.Add(byteStream.Dequeue());
                                 }
                                 else
                                 {
@@ -252,13 +256,9 @@ namespace NTRIP
                             }
                             else
                             {
-                                if(stream.DataAvailable)
-                                {
-                                    if((byte)stream.ReadByte() == HeaderUtil.RTCM_PREAMBLE)
+                                if (byteStream.Count > 2)
+                                    if (byteStream.Dequeue() == HeaderUtil.RTCM_PREAMBLE)
                                         preamableFound = true;
-                                }
-                                else
-                                    Thread.Sleep(20);
                             }
                             break;
 
@@ -268,11 +268,11 @@ namespace NTRIP
                                 if (messageBytes.Count == 0)
                                     messageBytes.Add(SBPReceiverSender.PREAMBLE);
 
-                                while (messageBytes.Count < 6 && stream.DataAvailable)
-                                    messageBytes.Add((byte)stream.ReadByte());
+                                while (messageBytes.Count < 6 && byteStream.Count > 2)
+                                    messageBytes.Add(byteStream.Dequeue());
 
-                                while (messageBytes.Count < ((int)messageBytes[5] + 8) && messageBytes.Count >= 6 && stream.DataAvailable)
-                                    messageBytes.Add((byte)stream.ReadByte());
+                                while (messageBytes.Count < ((int)messageBytes[5] + 8) && messageBytes.Count >= 6 && byteStream.Count > 2)
+                                    messageBytes.Add(byteStream.Dequeue());
 
                                 if (messageBytes.Count == ((int)messageBytes[5] + 8))
                                 {
@@ -292,8 +292,8 @@ namespace NTRIP
                                 }
                             }
                             else
-                                if(stream.DataAvailable)
-                                    if ((byte)stream.ReadByte() == SBPReceiverSender.PREAMBLE)
+                                if (byteStream.Count > 2)
+                                    if (byteStream.Dequeue() == SBPReceiverSender.PREAMBLE)
                                         preamableFound = true;
                             break;
 
