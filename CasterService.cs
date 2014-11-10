@@ -93,6 +93,7 @@ namespace NTRIP
                     if (_tcpListener.Pending())
                         _clients.Add(new NtripClientContext(_tcpListener.AcceptTcpClient()));
 
+                    bool noActivity = true;
                     for (int i = 0; i < _clients.Count; i++)
                     {
                         _clients[i].ByteStorage.AddRange(_clients[i].ProcessIncoming());
@@ -113,6 +114,9 @@ namespace NTRIP
                                     _clients[i].ByteStorage.AddRange(_clients[i].LocalDelegate.Invoke());
                                 else if(_clients[i].ClientType == ClientType.NTRIP_Server)
                                     _clients[i].ByteStorage.AddRange(_clients[i].ProcessIncoming());
+
+                                if (_clients[i].ByteStorage.Count > 0)
+                                    noActivity = false;
 
                                 if ((_clients[i].ClientType == ClientType.NTRIP_ServerLocal || _clients[i].ClientType == ClientType.NTRIP_Server) &&_clients[i].ByteStorage.Count > 0)
                                 {
@@ -137,6 +141,9 @@ namespace NTRIP
                             messageLines.AddRange(message.Split(new string[] { Constants.CRLF }, int.MaxValue, StringSplitOptions.None));
 
                             _clients[i].ByteStorage.RemoveRange(0, Encoding.ASCII.GetByteCount(message));
+
+                            if (messageLines.Count < 1)
+                                noActivity = false;
 
                             if (_clients[i].ClientType == ClientType.Unknown && messageLines.Count > 0)
                             {
@@ -244,7 +251,9 @@ namespace NTRIP
 
                     }
 
-                    Thread.Sleep(0);
+                    if (noActivity)
+                        Thread.Sleep(1);
+
                 }
                 _tcpListener.Stop();
                 foreach (NtripClientContext client in _clients)
