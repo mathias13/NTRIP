@@ -244,7 +244,7 @@ namespace NTRIP
 
                     }
 
-                    Thread.Sleep(5);
+                    Thread.Sleep(0);
                 }
                 _tcpListener.Stop();
                 foreach (NtripClientContext client in _clients)
