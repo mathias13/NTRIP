@@ -209,94 +209,101 @@ namespace NTRIP
                 {
                     byte[] buffer = new byte[1024];
                     int bytesReceived = _tcpClient.GetStream().Read(buffer, 0, buffer.Length);
-                    for (int i = 0; i < bytesReceived; i++)
-                        byteStream.Enqueue(buffer[i]);
-                    switch(_gnssStream)
-                    {
-                        case GNSSStream.RTCM:
-                            if(preamableFound)
-                            {
-                                if(messageBytes.Count < 3 && byteStream.Count > 2)
-                                {
-                                    messageBytes.Add(HeaderUtil.RTCM_PREAMBLE);
-                                    messageBytes.Add(byteStream.Dequeue());
-                                    messageBytes.Add(byteStream.Dequeue());
-                                    messageLength = (int)BitUtil.GetUnsigned(messageBytes.ToArray(), 14, 10);
-                                }
+                    if (bytesReceived < 1)
+                        Thread.Sleep(1);
+                    else
+                        for (int i = 0; i < bytesReceived; i++)
+                            byteStream.Enqueue(buffer[i]);
 
-                                if(messageBytes.Count < messageLength + 6 && messageBytes.Count > 2)
+                    while (byteStream.Count > 1)
+                    {
+                        switch (_gnssStream)
+                        {
+                            case GNSSStream.RTCM:
+                                if (preamableFound)
                                 {
-                                    if (byteStream.Count > 2)
+                                    if (messageBytes.Count < 3 && byteStream.Count > 1)
+                                    {
+                                        messageBytes.Add(HeaderUtil.RTCM_PREAMBLE);
                                         messageBytes.Add(byteStream.Dequeue());
+                                        messageBytes.Add(byteStream.Dequeue());
+                                        messageLength = (int)BitUtil.GetUnsigned(messageBytes.ToArray(), 14, 10);
+                                    }
+
+                                    if (messageBytes.Count < messageLength + 6 && messageBytes.Count > 2)
+                                    {
+                                        if (byteStream.Count > 0)
+                                            messageBytes.Add(byteStream.Dequeue());
+                                    }
+                                    else
+                                    {
+                                        object message = null;
+                                        int messageType = (int)BitUtil.GetUnsigned(messageBytes.ToArray(), 24, 12);
+                                        if (HeaderUtil.CheckAndRemoveRTCMHeader(ref messageBytes))
+                                        {
+                                            MessageEnum.Messages messageTypeEnum = MessageEnum.Messages.Unknown;
+                                            if (Enum.IsDefined(typeof(MessageEnum.Messages), messageType))
+                                                messageTypeEnum = (MessageEnum.Messages)messageType;
+                                            switch (messageTypeEnum)
+                                            {
+                                                case MessageEnum.Messages.MSG_1002:
+                                                    message = new Message_1002(messageBytes.ToArray());
+                                                    break;
+
+                                                case MessageEnum.Messages.Unknown:
+                                                    messageBytes.Clear();
+                                                    continue;
+                                            }
+                                            OnRTCMReceived(messageTypeEnum, message);
+                                        }
+                                        else
+                                            ;//TODO trigger event;
+                                    }
                                 }
                                 else
                                 {
-                                    object message = null;
-                                    int messageType = (int)BitUtil.GetUnsigned(messageBytes.ToArray(), 24,12);
-                                    if (HeaderUtil.CheckAndRemoveRTCMHeader(ref messageBytes))
-                                    {
-                                        MessageEnum.Messages messageTypeEnum = MessageEnum.Messages.Unknown;
-                                        if (Enum.IsDefined(typeof(MessageEnum.Messages), messageType))
-                                            messageTypeEnum = (MessageEnum.Messages)messageType;
-                                        switch (messageTypeEnum)
-                                        {
-                                            case MessageEnum.Messages.MSG_1002:
-                                                message = new Message_1002(messageBytes.ToArray());
-                                                break;
-
-                                            case MessageEnum.Messages.Unknown:
-                                                messageBytes.Clear();
-                                                continue;
-                                        }
-                                        OnRTCMReceived(messageTypeEnum, message);
-                                    }
-                                    else
-                                        ;//TODO trigger event;
+                                    if (byteStream.Count > 0)
+                                        if (byteStream.Dequeue() == HeaderUtil.RTCM_PREAMBLE)
+                                            preamableFound = true;
                                 }
-                            }
-                            else
-                            {
-                                if (byteStream.Count > 2)
-                                    if (byteStream.Dequeue() == HeaderUtil.RTCM_PREAMBLE)
-                                        preamableFound = true;
-                            }
-                            break;
+                                break;
 
-                        case GNSSStream.SBPRaw:
-                            if (preamableFound)
-                            {
-                                if (messageBytes.Count == 0)
-                                    messageBytes.Add(SBPReceiverSender.PREAMBLE);
-
-                                while (messageBytes.Count < 6 && byteStream.Count > 2)
-                                    messageBytes.Add(byteStream.Dequeue());
-
-                                while (messageBytes.Count < ((int)messageBytes[5] + 8) && messageBytes.Count >= 6 && byteStream.Count > 2)
-                                    messageBytes.Add(byteStream.Dequeue());
-
-                                if (messageBytes.Count == ((int)messageBytes[5] + 8))
+                            case GNSSStream.SBPRaw:
+                                if (preamableFound)
                                 {
-                                    List<byte> crcBytes = new List<byte>();
-                                    for (int i = 1; i < messageBytes.Count - 2; i++)
-                                        crcBytes.Add(messageBytes[i]);
+                                    if (messageBytes.Count == 0)
+                                        messageBytes.Add(SBPReceiverSender.PREAMBLE);
 
-                                    ushort crc = Crc16CcittKermit.ComputeChecksum(crcBytes.ToArray());
-                                    byte[] crcSumBytes = new byte[2] { messageBytes[messageBytes.Count - 2], messageBytes[messageBytes.Count - 1] };
-                                    ushort crcInMessage = BitConverter.ToUInt16(crcSumBytes, 0);
-                                    if (crc == crcInMessage)
-                                        OnSBPRawReceived(messageBytes.ToArray());
-                                    else
-                                        ;//TODO Trigger event
-                                    messageBytes.Clear();
-                                    preamableFound = false;
+                                    while (messageBytes.Count < 6 && byteStream.Count > 0)
+                                        messageBytes.Add(byteStream.Dequeue());
+
+                                    while (messageBytes.Count < ((int)messageBytes[5] + 8) && messageBytes.Count >= 6 && byteStream.Count > 0)
+                                        messageBytes.Add(byteStream.Dequeue());
+
+                                    if (messageBytes.Count == ((int)messageBytes[5] + 8))
+                                    {
+                                        List<byte> crcBytes = new List<byte>();
+                                        for (int i = 1; i < messageBytes.Count - 2; i++)
+                                            crcBytes.Add(messageBytes[i]);
+
+                                        ushort crc = Crc16CcittKermit.ComputeChecksum(crcBytes.ToArray());
+                                        byte[] crcSumBytes = new byte[2] { messageBytes[messageBytes.Count - 2], messageBytes[messageBytes.Count - 1] };
+                                        ushort crcInMessage = BitConverter.ToUInt16(crcSumBytes, 0);
+                                        if (crc == crcInMessage)
+                                            OnSBPRawReceived(messageBytes.ToArray());
+                                        else
+                                            ;//TODO Trigger event
+                                        messageBytes.Clear();
+                                        preamableFound = false;
+                                    }
                                 }
-                            }
-                            else
-                                if (byteStream.Count > 2)
-                                    if (byteStream.Dequeue() == SBPReceiverSender.PREAMBLE)
-                                        preamableFound = true;
-                            break;
+                                else
+                                    if (byteStream.Count > 2)
+                                        if (byteStream.Dequeue() == SBPReceiverSender.PREAMBLE)
+                                            preamableFound = true;
+                                break;
 
+                        }
                     }
                 }
                 catch (Exception e)
