@@ -30,7 +30,7 @@ namespace NTRIP.LocalServer
 
         private void _sbpReceiverSender_ReceivedRawMessageEvent(object sender, SBPRawMessageEventArgs e)
         {
-            if (e.MessageType == SBP_Enums.MessageTypes.OBS_HDR)
+            if (e.MessageType == SBP_Enums.MessageTypes.OBS_HDR || e.MessageType == SBP_Enums.MessageTypes.BASEPOS)
                 lock (_syncObject)
                     _messageQueue.Enqueue(e.Message);
         }
