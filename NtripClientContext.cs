@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using Utilities.Log;
 
 namespace NTRIP
 {
@@ -124,9 +123,10 @@ namespace NTRIP
             }
             catch(Exception e)
             {
-                Log.Error(e);
                 if (!_tcpClient.Connected)
                     _removeFlag = true;
+
+                throw e;
             }
         }
 
@@ -151,9 +151,10 @@ namespace NTRIP
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e);
                     if (!_tcpClient.Connected)
                         _removeFlag = true;
+
+                    throw e;
                 }
             }
             return bytes;

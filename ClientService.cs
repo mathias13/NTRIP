@@ -8,7 +8,6 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using Utilities.Log;
 using SwiftBinaryProtocol;
 
 namespace NTRIP
@@ -174,7 +173,6 @@ namespace NTRIP
                     }
                     catch (Exception e)
                     {
-                        Log.Error(e);
                         OnConnectionException(e, ConnectionFailure.UnhandledException);
                     }
                 }
@@ -308,7 +306,6 @@ namespace NTRIP
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e);
                     OnConnectionException(e, ConnectionFailure.UnhandledException);
                 }
             }

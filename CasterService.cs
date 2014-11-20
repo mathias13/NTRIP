@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text;
-using Utilities.Log;
 
 
 namespace NTRIP
@@ -261,7 +260,7 @@ namespace NTRIP
             }
             catch (Exception e)
             {
-                Log.Error(e);
+                //TODO create event for this exception
                 if (!_stopListening)
                     StartListening();
             }

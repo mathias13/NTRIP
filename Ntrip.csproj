@@ -62,10 +62,6 @@
       <Project>{cab096cd-070d-45db-8340-8b4efb073bb9}</Project>
       <Name>SwiftBinaryProtocol</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Utilities\Utilities\Utilities.csproj">
-      <Project>{7b42a768-a977-4e3f-936a-4f3b72ecb6e1}</Project>
-      <Name>Utilities</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="LICENSE.txt" />
