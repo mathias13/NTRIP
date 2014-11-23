@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Text;
 using Utilities.Log;
+using NTRIP.Settings;
 
 
 namespace NTRIP
@@ -35,11 +36,14 @@ namespace NTRIP
 
         #region ctor
 
-        public CasterService()
+        public CasterService(CasterSettings settings)
         {
-            _tcpListener = new TcpListener(IPAddress.Any, PORT_NUMBER);
+            _tcpListener = new TcpListener(IPAddress.Any, settings.PortNumber);
             _mountPoints.Add(new KeyValuePair<int, MountPoint>(1, new MountPoint("testMathias", "nolgarden", "RTCM", Carrier.L1, "GNSS", 58.512585f, 13.854581f)));
-            _users.Add(new KeyValuePair<string, string>("testUser", "testPassword"));
+            
+            foreach (NTRIPUser user in settings.NTRIPUsers)
+                _users.Add(new KeyValuePair<string, string>(user.UserName, user.UserPassword));
+
             LocalServer.SBPRawLocalServer piksiServer = new LocalServer.SBPRawLocalServer();
             NtripClientContext piksi = new NtripClientContext(piksiServer, GetMountPoint("testMathias"));
             piksi.ClientType = ClientType.NTRIP_ServerLocal;
