@@ -5,30 +5,41 @@ namespace NTRIP.Settings
 {   
     public class CasterSettings : ConfigurationSection
     {
-        private static ConfigurationProperty portNumber =
+        private static ConfigurationProperty _portNumber =
             new ConfigurationProperty("PortNumber", typeof(Int32), 5000, ConfigurationPropertyOptions.IsRequired);
 
-        private static ConfigurationProperty ntripUsers =
+        private static ConfigurationProperty _ntripUsers =
             new ConfigurationProperty("NTRIPUsers", typeof(NTRIPUserCollection), null, ConfigurationPropertyOptions.IsRequired);
+
+        private static ConfigurationProperty _ntripMountPoints =
+            new ConfigurationProperty("NTRIPMountPoints", typeof(NTRIPMountPointCollection), null, ConfigurationPropertyOptions.IsRequired);
 
         public CasterSettings()
         {
-            base.Properties.Add(portNumber);
-            base.Properties.Add(ntripUsers);
+            base.Properties.Add(_portNumber);
+            base.Properties.Add(_ntripUsers);
+            base.Properties.Add(_ntripMountPoints);
         }
 
         [ConfigurationProperty("PortNumber", IsRequired = true)]
         public int PortNumber
         {
-            get { return (int)this[portNumber]; }
-            set { this[portNumber] = value; }
+            get { return (int)this[_portNumber]; }
+            set { this[_portNumber] = value; }
         }
 
         [ConfigurationProperty("NTRIPUsers", IsRequired = true)]
         public NTRIPUserCollection NTRIPUsers
         {
-            get { return (NTRIPUserCollection)this[ntripUsers]; }
-            set { this[ntripUsers] = value; }
+            get { return (NTRIPUserCollection)this[_ntripUsers]; }
+            set { this[_ntripUsers] = value; }
+        }
+
+        [ConfigurationProperty("NTRIPMountPoints", IsRequired = true)]
+        public NTRIPMountPointCollection NTRIPMountPoints
+        {
+            get { return (NTRIPMountPointCollection)this[_ntripMountPoints]; }
+            set { this[_ntripMountPoints] = value; }
         }
     }
 }

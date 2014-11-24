@@ -5,6 +5,7 @@ namespace NTRIP.Settings
 {
     [ConfigurationCollection(typeof(NTRIPUser), AddItemName = "NTRIPUser",
             CollectionType = ConfigurationElementCollectionType.BasicMap)]
+
     public class NTRIPUserCollection : ConfigurationElementCollection
     {
         public void CreateExampleUser()
