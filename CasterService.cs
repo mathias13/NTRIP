@@ -39,7 +39,7 @@ namespace NTRIP
         public CasterService(CasterSettings settings)
         {
             _tcpListener = new TcpListener(IPAddress.Any, settings.PortNumber);
-            _mountPoints.Add(new KeyValuePair<int, MountPoint>(1, new MountPoint("testMathias", "nolgarden", "RTCM", Carrier.L1, "GNSS", 58.512585f, 13.854581f)));
+            _mountPoints.Add(new KeyValuePair<int, MountPoint>(1, new MountPoint("testMathias", "nolgarden", "RTCM", CarrierEnum.L1, "GNSS", 58.512585f, 13.854581f)));
             
             foreach (NTRIPUser user in settings.NTRIPUsers)
                 _users.Add(new KeyValuePair<string, string>(user.UserName, user.UserPassword));
