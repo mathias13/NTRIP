@@ -73,6 +73,12 @@ namespace NTRIP.Settings
             get { return (CarrierEnum)this[_carrier]; }
         }
 
+        [ConfigurationProperty("NavSystem", IsRequired = true)]
+        public string NavSystem
+        {
+            get { return (string)this[_navSystem]; }
+        }
+
         [ConfigurationProperty("Longitude", IsRequired = true)]
         public float Longitude
         {
