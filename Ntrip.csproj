@@ -46,7 +46,7 @@
     <Compile Include="Eventarguments\ConnectionExceptionArgs.cs" />
     <Compile Include="Eventarguments\RTCMReceived.cs" />
     <Compile Include="Eventarguments\SBPRawReceived.cs" />
-    <Compile Include="LocalServer\ILocalServer.cs" />
+    <Compile Include="ILocalServer.cs" />
     <Compile Include="LocalServer\SBPLocalServer.cs" />
     <Compile Include="LocalServer\SBPToRTCMLocalServer.cs" />
     <Compile Include="MountPoint.cs" />
@@ -54,6 +54,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="LocalServer\SBPRawLocalServer.cs" />
     <Compile Include="Settings\CasterSettings.cs" />
+    <Compile Include="Settings\LocalServer.cs" />
+    <Compile Include="Settings\LocalServerCollection.cs" />
     <Compile Include="Settings\NTRIPMountPoint.cs" />
     <Compile Include="Settings\NTRIPUser.cs" />
     <Compile Include="Settings\NTRIPMounPointColletion.cs" />
