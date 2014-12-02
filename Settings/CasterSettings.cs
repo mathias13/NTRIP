@@ -14,6 +14,9 @@ namespace NTRIP.Settings
         private static ConfigurationProperty _ntripMountPoints =
             new ConfigurationProperty("NTRIPMountPoints", typeof(NTRIPMountPointCollection), null, ConfigurationPropertyOptions.IsRequired);
 
+        private static ConfigurationProperty _localServers =
+            new ConfigurationProperty("LocalServers", typeof(LocalServerCollection), null, ConfigurationPropertyOptions.IsRequired);
+
         public CasterSettings()
         {
             base.Properties.Add(_portNumber);
@@ -40,6 +43,13 @@ namespace NTRIP.Settings
         {
             get { return (NTRIPMountPointCollection)this[_ntripMountPoints]; }
             set { this[_ntripMountPoints] = value; }
+        }
+
+        [ConfigurationProperty("LocalServers", IsRequired = true)]
+        public NTRIPMountPointCollection LocalServers
+        {
+            get { return (NTRIPMountPointCollection)this[_localServers]; }
+            set { this[_localServers] = value; }
         }
     }
 }
