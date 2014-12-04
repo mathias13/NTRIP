@@ -1,6 +1,4 @@
-﻿using RTCM;
-using RTCM.MESSAGES;
-using NTRIP.Eventarguments;
+﻿using NTRIP.Eventarguments;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -8,17 +6,9 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using SwiftBinaryProtocol;
 
 namespace NTRIP
 {
-    public enum GNSSStream
-    {
-        RTCM,
-        SBP,
-        SBPRaw
-    }
-
     public class ClientService
     {
         #region Events
@@ -63,18 +53,16 @@ namespace NTRIP
 
         private string _password;
 
-        private GNSSStream _gnssStream;
 
         #endregion
 
-        public ClientService(int tcpPort, IPAddress ipAdress, string mountPoint, string user, string password, GNSSStream gnssStream)
+        public ClientService(int tcpPort, IPAddress ipAdress, string mountPoint, string user, string password)
         {
             _tcpPort = tcpPort;
             _ipAdress = ipAdress;
             _mountPoint = mountPoint;
             _user = user;
             _password = password;
-            _gnssStream = gnssStream;
 
             _serverConnectionThread = new Thread(new ThreadStart(ServerConnectionThread));
             _serverConnectionThread.Start();
@@ -215,93 +203,7 @@ namespace NTRIP
 
                     while (byteStream.Count > 1)
                     {
-                        switch (_gnssStream)
-                        {
-                            case GNSSStream.RTCM:
-                                if (preamableFound)
-                                {
-                                    if (messageBytes.Count < 3 && byteStream.Count > 1)
-                                    {
-                                        messageBytes.Add(HeaderUtil.RTCM_PREAMBLE);
-                                        messageBytes.Add(byteStream.Dequeue());
-                                        messageBytes.Add(byteStream.Dequeue());
-                                        messageLength = (int)BitUtil.GetUnsigned(messageBytes.ToArray(), 14, 10);
-                                    }
-
-                                    if (messageBytes.Count < messageLength + 6 && messageBytes.Count > 2)
-                                    {
-                                        if (byteStream.Count > 0)
-                                            messageBytes.Add(byteStream.Dequeue());
-                                    }
-                                    else
-                                    {
-                                        object message = null;
-                                        int messageType = (int)BitUtil.GetUnsigned(messageBytes.ToArray(), 24, 12);
-                                        if (HeaderUtil.CheckAndRemoveRTCMHeader(ref messageBytes))
-                                        {
-                                            MessageEnum.Messages messageTypeEnum = MessageEnum.Messages.Unknown;
-                                            if (Enum.IsDefined(typeof(MessageEnum.Messages), messageType))
-                                                messageTypeEnum = (MessageEnum.Messages)messageType;
-                                            switch (messageTypeEnum)
-                                            {
-                                                case MessageEnum.Messages.MSG_1002:
-                                                    message = new Message_1002(messageBytes.ToArray());
-                                                    break;
-
-                                                case MessageEnum.Messages.Unknown:
-                                                    messageBytes.Clear();
-                                                    continue;
-                                            }
-                                            OnRTCMReceived(messageTypeEnum, message);
-                                        }
-                                        else
-                                            ;//TODO trigger event;
-                                    }
-                                }
-                                else
-                                {
-                                    if (byteStream.Count > 0)
-                                        if (byteStream.Dequeue() == HeaderUtil.RTCM_PREAMBLE)
-                                            preamableFound = true;
-                                }
-                                break;
-
-                            case GNSSStream.SBPRaw:
-                                if (preamableFound)
-                                {
-                                    if (messageBytes.Count == 0)
-                                        messageBytes.Add(SBPReceiverSender.PREAMBLE);
-
-                                    while (messageBytes.Count < 6 && byteStream.Count > 0)
-                                        messageBytes.Add(byteStream.Dequeue());
-
-                                    while (messageBytes.Count < ((int)messageBytes[5] + 8) && messageBytes.Count >= 6 && byteStream.Count > 0)
-                                        messageBytes.Add(byteStream.Dequeue());
-
-                                    if (messageBytes.Count == ((int)messageBytes[5] + 8))
-                                    {
-                                        List<byte> crcBytes = new List<byte>();
-                                        for (int i = 1; i < messageBytes.Count - 2; i++)
-                                            crcBytes.Add(messageBytes[i]);
-
-                                        ushort crc = Crc16CcittKermit.ComputeChecksum(crcBytes.ToArray());
-                                        byte[] crcSumBytes = new byte[2] { messageBytes[messageBytes.Count - 2], messageBytes[messageBytes.Count - 1] };
-                                        ushort crcInMessage = BitConverter.ToUInt16(crcSumBytes, 0);
-                                        if (crc == crcInMessage)
-                                            OnSBPRawReceived(messageBytes.ToArray());
-                                        else
-                                            ;//TODO Trigger event
-                                        messageBytes.Clear();
-                                        preamableFound = false;
-                                    }
-                                }
-                                else
-                                    if (byteStream.Count > 2)
-                                        if (byteStream.Dequeue() == SBPReceiverSender.PREAMBLE)
-                                            preamableFound = true;
-                                break;
-
-                        }
+                        //TODO Fix this it's not the NTRIP service buisness to decode the stream
                     }
                 }
                 catch (Exception e)
