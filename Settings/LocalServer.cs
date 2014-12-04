@@ -29,6 +29,15 @@ namespace NTRIP.Settings
             base.Properties.Add(_constructorArgs);
         }
 
+        public LocalServer(string name, string dllPath, string className, string mountPoint, string constructorArgs):this()
+        {
+            this[_name] = name;
+            this[_dllPath] = dllPath;
+            this[_className] = className;
+            this[_mountPoint] = mountPoint;
+            this[_constructorArgs] = constructorArgs;
+        }
+
         [ConfigurationProperty("Name", IsRequired = true)]
         public string Name
         {

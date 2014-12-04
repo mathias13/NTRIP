@@ -8,6 +8,11 @@ namespace NTRIP.Settings
 
     public class LocalServerCollection : ConfigurationElementCollection
     {
+        public void CreateExampleServer()
+        {
+            base.BaseAdd(new LocalServer("SBP", @"C:\SBP\SBP.dll", "SBPLocalServer", "ExampleName", "-P COM1"));
+        }
+
         protected override ConfigurationElement CreateNewElement()
         {
             return new LocalServer();

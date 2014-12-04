@@ -46,9 +46,9 @@ namespace NTRIP.Settings
         }
 
         [ConfigurationProperty("LocalServers", IsRequired = true)]
-        public NTRIPMountPointCollection LocalServers
+        public LocalServerCollection LocalServers
         {
-            get { return (NTRIPMountPointCollection)this[_localServers]; }
+            get { return (LocalServerCollection)this[_localServers]; }
             set { this[_localServers] = value; }
         }
     }
