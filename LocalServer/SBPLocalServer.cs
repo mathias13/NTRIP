@@ -6,7 +6,7 @@ using SwiftBinaryProtocol;
 using SwiftBinaryProtocol.Eventarguments;
 using SwiftBinaryProtocol.MessageStructs;
 
-namespace NTRIP.LocalServer
+namespace NTRIP.LocalServerInstances
 {
     public class SBPLocalServer : ILocalServer, IDisposable
     {

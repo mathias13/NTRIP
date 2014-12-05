@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NTRIP
 {
-    public enum Carrier
+    public enum CarrierEnum
     {
         NO = 0,
         L1 = 1,
@@ -21,7 +21,7 @@ namespace NTRIP
 
         private string _format;
 
-        private Carrier _carrier;
+        private CarrierEnum _carrier;
 
         private string _navSystem;
 
@@ -29,7 +29,7 @@ namespace NTRIP
 
         private float _longitude;
 
-        public MountPoint(string name, string location, string format, Carrier carrier, string navSystem, float latitude, float longitude)
+        public MountPoint(string name, string location, string format, CarrierEnum carrier, string navSystem, float latitude, float longitude)
         {
             _name = name;
             _location = location;
@@ -55,7 +55,7 @@ namespace NTRIP
             get { return _format; }
         }
 
-        public Carrier Carrier
+        public CarrierEnum Carrier
         {
             get { return _carrier; }
         }

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading;
 using System.Text;
-
 
 namespace NTRIP
 {
@@ -34,15 +35,50 @@ namespace NTRIP
 
         #region ctor
 
-        public CasterService()
+        public CasterService(CasterSettings settings)
         {
-            _tcpListener = new TcpListener(IPAddress.Any, PORT_NUMBER);
-            _mountPoints.Add(new KeyValuePair<int, MountPoint>(1, new MountPoint("testMathias", "nolgarden", "RTCM", Carrier.L1, "GNSS", 58.512585f, 13.854581f)));
-            _users.Add(new KeyValuePair<string, string>("testUser", "testPassword"));
-            LocalServer.SBPRawLocalServer piksiServer = new LocalServer.SBPRawLocalServer();
-            NtripClientContext piksi = new NtripClientContext(piksiServer, GetMountPoint("testMathias"));
+            _tcpListener = new TcpListener(IPAddress.Any, settings.PortNumber);
+            int i = 0;
+            foreach(NTRIPMountPoint mountPoint in settings.NTRIPMountPoints)
+            {
+                _mountPoints.Add(i, new MountPoint(mountPoint.Name, mountPoint.Format, mountPoint.Format, mountPoint.Carrier, mountPoint.NavSystem, mountPoint.Latitude, mountPoint.Longitude));
+                i++;
+            }
+
+            foreach (NTRIPUser user in settings.NTRIPUsers)
+                _users.Add(new KeyValuePair<string, string>(user.UserName, user.UserPassword));
+
+
+            foreach(LocalServer localServer in settings.LocalServers)
+            {
+                if (!File.Exists(localServer.DLLPath))
+                    throw new FileNotFoundException("Couldn't find dll", localServer.DLLPath);
+
+                Assembly serverAssembly = Assembly.LoadFile(localServer.DLLPath);
+                Type serverType = serverAssembly.GetType(localServer.ClassName);
+                if (serverType == null)
+                    throw new NullReferenceException(String.Format("ClassName: {0} doesn't exist in {1}", localServer.ClassName, localServer.DLLPath));
+                else if (!CheckILocalServer(serverType))
+                    throw new Exception(String.Format("Class: {0} doesn't implement ILocalServer", serverType.Name));
+
+                ILocalServer serverInstance = null;
+
+                foreach(ConstructorInfo constructor in serverType.GetConstructors())
+        {
+                    ParameterInfo[] parameter = constructor.GetParameters();
+                    if(parameter.Length > 0)
+                        if(parameter[0].ParameterType == typeof(String))
+                            serverInstance = (ILocalServer)Activator.CreateInstance(serverType, localServer.ConstructorArguments);
+                }
+
+                //If type doesn't contain constructor with arguments create it using no parameters
+                if (serverInstance == null)
+                    serverInstance = (ILocalServer)Activator.CreateInstance(serverType);
+
+                NtripClientContext piksi = new NtripClientContext(serverInstance, GetMountPoint(localServer.MountPoint));
             piksi.ClientType = ClientType.NTRIP_ServerLocal;
             _clients.Add(piksi);
+        }
         }
 
         #endregion
@@ -303,6 +339,15 @@ namespace NTRIP
             return msg;
         }
 
+        private bool CheckILocalServer(Type serverType)
+        {
+            foreach (Type type in serverType.GetInterfaces()) 
+                if (type == typeof(ILocalServer)) 
+                    return true;  
+            
+            return false;
+        }
+        
         #endregion
     }
 }
