@@ -14,11 +14,7 @@ namespace NTRIP
         #region Events
 
         public event EventHandler<ConnectionExceptionArgs> ConnectionExceptionEvent;
-
-        public event EventHandler<RTCMReceived> RTCMReceivedEvent;
-
-        public event EventHandler<SBPRawReceived> SBPRawReceivedEvent;
-        
+                
         #endregion
 
         #region Private Variables
@@ -223,46 +219,9 @@ namespace NTRIP
                 ConnectionExceptionEvent.Invoke(this, new ConnectionExceptionArgs(e, connectionFailure));
         }
 
-        protected void OnRTCMReceived(MessageEnum.Messages msgType, object message)
-        {
-            if (RTCMReceivedEvent != null)
-                RTCMReceivedEvent.Invoke(this, new RTCMReceived(msgType, message));
-        }
-
-        protected void OnSBPRawReceived(byte[] message)
-        {
-            if (SBPRawReceivedEvent != null)
-                SBPRawReceivedEvent.Invoke(this, new SBPRawReceived(message));
-        }
-
-        //protected void OnServerMessage(ServerMessage message)
-        //{
-        //    ServerMessageEventArgs e = new ServerMessageEventArgs(message);
-        //    ServerMessageEventHandler handler = ServerMessageEvent;
-        //    if (handler != null)
-        //        handler.Invoke(this, e);
-        //}
-
-        //protected void OnServerConnectedChanged(bool isConnected)
-        //{
-        //    _serverConnectionAvailable = isConnected;
-        //    if (!isConnected)
-        //        _serverConnectionLostEvent.Set();
-
-        //    ServerConnectedChangedEventHandler handler = ServerConnectedChangedEvent;
-        //    if (handler != null)
-        //        handler.Invoke(this, isConnected);
-        //}
-
         #endregion
 
         #region Public Methods
-
-        public void SendServerMessage(ISendMessage message)
-        {
-            lock (_syncObject)
-                ;
-        }
 
         public void StartConnecting()
         {

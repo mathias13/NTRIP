@@ -44,8 +44,6 @@
     <Compile Include="ClientService.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Eventarguments\ConnectionExceptionArgs.cs" />
-    <Compile Include="Eventarguments\RTCMReceived.cs" />
-    <Compile Include="Eventarguments\SBPRawReceived.cs" />
     <Compile Include="ILocalServer.cs" />
     <Compile Include="MountPoint.cs" />
     <Compile Include="NtripClientContext.cs" />
@@ -58,7 +56,6 @@
     <Compile Include="Settings\NTRIPMounPointColletion.cs" />
     <Compile Include="Settings\NTRIPUserCollection.cs" />
   </ItemGroup>
-  <ItemGroup>
   <ItemGroup>
     <Content Include="LICENSE.txt" />
   </ItemGroup>

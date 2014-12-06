@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NTRIP.Settings;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -49,7 +50,7 @@ namespace NTRIP
                 _users.Add(new KeyValuePair<string, string>(user.UserName, user.UserPassword));
 
 
-            foreach(LocalServer localServer in settings.LocalServers)
+            foreach (LocalServer localServer in settings.LocalServers)
             {
                 if (!File.Exists(localServer.DLLPath))
                     throw new FileNotFoundException("Couldn't find dll", localServer.DLLPath);
@@ -63,11 +64,11 @@ namespace NTRIP
 
                 ILocalServer serverInstance = null;
 
-                foreach(ConstructorInfo constructor in serverType.GetConstructors())
-        {
+                foreach (ConstructorInfo constructor in serverType.GetConstructors())
+                {
                     ParameterInfo[] parameter = constructor.GetParameters();
-                    if(parameter.Length > 0)
-                        if(parameter[0].ParameterType == typeof(String))
+                    if (parameter.Length > 0)
+                        if (parameter[0].ParameterType == typeof(String))
                             serverInstance = (ILocalServer)Activator.CreateInstance(serverType, localServer.ConstructorArguments);
                 }
 
@@ -76,9 +77,19 @@ namespace NTRIP
                     serverInstance = (ILocalServer)Activator.CreateInstance(serverType);
 
                 NtripClientContext piksi = new NtripClientContext(serverInstance, GetMountPoint(localServer.MountPoint));
-            piksi.ClientType = ClientType.NTRIP_ServerLocal;
-            _clients.Add(piksi);
+                piksi.ClientType = ClientType.NTRIP_ServerLocal;
+                _clients.Add(piksi);
+            }
         }
+
+        public CasterService(CasterSettings settings, IDictionary<string, ILocalServer> servers):this(settings)
+        {
+            foreach (KeyValuePair<string, ILocalServer> server in servers)
+            {
+                NtripClientContext piksi = new NtripClientContext(server.Value, GetMountPoint(server.Key));
+                piksi.ClientType = ClientType.NTRIP_ServerLocal;
+                _clients.Add(piksi);
+            }
         }
 
         #endregion
