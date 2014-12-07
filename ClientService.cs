@@ -2,6 +2,7 @@
 using NTRIP.Settings;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -15,6 +16,10 @@ namespace NTRIP
         #region Events
 
         public event EventHandler<ConnectionExceptionArgs> ConnectionExceptionEvent;
+
+        public event EventHandler<StreamReceivedArgs> StreamDataReceivedEvent;
+
+        public event EventHandler<SourceTableArgs> SourceTableReceivedEvent;
                 
         #endregion
 
@@ -140,7 +145,15 @@ namespace NTRIP
                             }
 
                             if (msgReturned.Contains(Constants.CRLF))
-                                responseComplete = true;
+                            {
+                                if (msgReturned.Contains(Constants.SOURCE200OK))
+                                {
+                                    if (msgReturned.Contains(Constants.ENDSOURCETABLE))
+                                        responseComplete = true;
+                                }
+                                else
+                                    responseComplete = true;
+                            }
 
                             if (DateTime.Now > timeOut)
                                 break;
@@ -160,8 +173,29 @@ namespace NTRIP
                             else if (msgReturned.Contains(Constants.SOURCE200OK))
                             {
                                 _connect = false;
-                                nextConnection = DateTime.Now.AddSeconds(30.0);
-                                OnConnectionException(null, ConnectionFailure.MountpointNotValid);
+                                if(_mountPoint != String.Empty)
+                                    OnConnectionException(null, ConnectionFailure.MountpointNotValid);
+                                
+                                msgReturned = msgReturned.Replace(Constants.SOURCE200OK + Constants.CRLF, String.Empty);
+                                List<MountPoint> mountPoints = new List<MountPoint>();
+                                string[] mountPointStrings = msgReturned.Split(new string[]{Constants.CRLF}, StringSplitOptions.None);
+                                foreach(string mountPointString in mountPointStrings)
+                                {
+                                    if(mountPointString.StartsWith("STR"))
+                                    {
+                                        string[] fields = mountPointString.Split(new char[] { ';' });
+                                        mountPoints.Add(new MountPoint(fields[1],
+                                                            fields[2],
+                                                            fields[3],
+                                                            (CarrierEnum)Convert.ToInt32(fields[5]),
+                                                            fields[6],
+                                                            Convert.ToSingle(fields[9], new CultureInfo("en-US")),
+                                                            Convert.ToSingle(fields[10], new CultureInfo("en-US"))));
+                                    }
+
+                                }
+
+                                OnSourceTableReceived(mountPoints.ToArray());
                             }
                         }
                     }
@@ -217,12 +251,10 @@ namespace NTRIP
                     if (bytesReceived < 1)
                         Thread.Sleep(1);
                     else
-                        for (int i = 0; i < bytesReceived; i++)
-                            byteStream.Enqueue(buffer[i]);
-
-                    while (byteStream.Count > 1)
                     {
-                        //TODO Fix this it's not the NTRIP service buisness to decode the stream
+                        byte[] dataStream = new byte[bytesReceived];
+                        Array.Copy(buffer, dataStream, bytesReceived);
+                        OnStreamDataReceived(dataStream, _mountPoint);
                     }
                 }
                 catch (Exception e)
@@ -242,28 +274,35 @@ namespace NTRIP
                 ConnectionExceptionEvent.Invoke(this, new ConnectionExceptionArgs(e, connectionFailure));
         }
 
+        protected void OnStreamDataReceived(byte[] data, string mountPoint)
+        {
+            if (StreamDataReceivedEvent != null)
+                StreamDataReceivedEvent.Invoke(this, new StreamReceivedArgs(data, mountPoint));
+        }
+
+        protected void OnSourceTableReceived(MountPoint[] mountPoints)
+        {
+            if (SourceTableReceivedEvent != null)
+                SourceTableReceivedEvent.Invoke(this, new SourceTableArgs(mountPoints));
+        }
+
         #endregion
 
         #region Public Methods
 
-        public void StartConnecting()
+        public void Connect()
         {
             _connect = true;
             if(!_serverConnectionAvailable)
                 _serverConnectionLostEvent.Set();
         }
 
-        public void StartConnecting(string mounpoint)
+        public void Connect(string mounpoint)
         {
             _mountPoint = mounpoint;
-            this.StartConnecting();            
+            this.Connect();            
         }
-
-        public void StopConnecting()
-        {
-            _connect = false;
-        }
-
+        
         #endregion
 
         #region Public Properties

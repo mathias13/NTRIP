@@ -12,6 +12,8 @@ namespace NTRIP
 
         public const string SOURCE200OK = "SOURCETABLE 200 OK";
 
+        public const string ENDSOURCETABLE = "ENDSOURCETABLE";
+
         public const string BAD_PASS = "ERROR - Bad Password";
 
         public const string UNAUTHORIZED = "HTTP/1.0 401 Unauthorized";

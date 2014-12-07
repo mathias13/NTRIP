@@ -345,7 +345,7 @@ namespace NTRIP
             msg += "Content-Type: text/plain" + Constants.CRLF;
             msg += "Content-Length: " + mountpoints.Length.ToString() + Constants.CRLF;
             msg += mountpoints;
-            msg += "ENDSOURCETABLE" + Constants.CRLF;
+            msg += Constants.ENDSOURCETABLE + Constants.CRLF;
 
             return msg;
         }
