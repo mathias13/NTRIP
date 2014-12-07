@@ -107,7 +107,7 @@ namespace NTRIP
         public void StartListening()
         {
             _stopListening = false;
-            _listeningThread = new Thread(new ThreadStart(ListeningThread));
+            _listeningThread = new Thread(new ThreadStart(WorkThread));
             _listeningThread.Start();
         }
 
@@ -147,7 +147,7 @@ namespace NTRIP
             return -1;
         }
 
-        private void ListeningThread()
+        private void WorkThread()
         {
             try
             {
