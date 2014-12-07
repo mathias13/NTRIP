@@ -1,4 +1,5 @@
 ﻿using NTRIP.Eventarguments;
+using NTRIP.Settings;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -38,8 +39,6 @@ namespace NTRIP
         private IPAddress _ipAdress;
 
         private int _tcpPort;
-        
-        private DateTime _lastHelloMessage = DateTime.MinValue;
 
         private bool _connect = false;
 
@@ -49,16 +48,27 @@ namespace NTRIP
 
         private string _password;
 
+        private int ALIVE_CHECK_TIMEOUT = 30;
 
         #endregion
 
-        public ClientService(int tcpPort, IPAddress ipAdress, string mountPoint, string user, string password)
+        public ClientService(ClientSettings settings)
         {
-            _tcpPort = tcpPort;
+            _tcpPort = settings.PortNumber;
+            IPAddress ipAdress = null;
+            if(!IPAddress.TryParse(settings.IPorHost, out ipAdress))
+            {
+                IPHostEntry ipAdresses = Dns.GetHostEntry(settings.IPorHost);
+                if(ipAdresses.AddressList.Length < 1)
+                    throw new Exception(String.Format("No valid ip found for: {0}", settings.IPorHost));
+                
+                _ipAdress = ipAdresses.AddressList[0];
+            }
+
             _ipAdress = ipAdress;
-            _mountPoint = mountPoint;
-            _user = user;
-            _password = password;
+            _mountPoint = settings.NTRIPMountPoint;
+            _user = settings.NTRIPUser.UserName;
+            _password = settings.NTRIPUser.UserPassword;
 
             _serverConnectionThread = new Thread(new ThreadStart(ServerConnectionThread));
             _serverConnectionThread.Start();
@@ -173,9 +183,8 @@ namespace NTRIP
 
         private void ServiceWorkThread()
         {
-            bool preamableFound = false;
+            DateTime aliveCheckTimeout = DateTime.MinValue;
             List<byte> messageBytes = new List<byte>();
-            int messageLength = Int32.MaxValue;
             Queue<byte> byteStream = new Queue<byte>();
             while (!_serviceWorkThreadStop)
             {
@@ -189,6 +198,20 @@ namespace NTRIP
 
                 try
                 {
+                    if (aliveCheckTimeout < DateTime.Now)
+                    {
+                        try
+                        {
+                            if (!(_tcpClient.Client.Poll(1, SelectMode.SelectRead) && _tcpClient.Client.Available == 0))
+                                OnConnectionException(new Exception("Lost connection to NTRIP Server"), ConnectionFailure.ConnectionTerminated);
+                        }
+                        catch (SocketException e)
+                        {
+                            OnConnectionException(e, ConnectionFailure.ConnectionTerminated);
+                        }
+                        aliveCheckTimeout = DateTime.Now.AddSeconds((double)ALIVE_CHECK_TIMEOUT);
+                    }
+
                     byte[] buffer = new byte[1024];
                     int bytesReceived = _tcpClient.GetStream().Read(buffer, 0, buffer.Length);
                     if (bytesReceived < 1)

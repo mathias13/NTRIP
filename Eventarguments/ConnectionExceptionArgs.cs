@@ -11,6 +11,7 @@ namespace NTRIP.Eventarguments
         UnhandledException,
         Unauthorized,
         MountpointNotValid,
+        ConnectionTerminated
     }
 
     public class ConnectionExceptionArgs
