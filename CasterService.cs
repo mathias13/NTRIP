@@ -34,6 +34,12 @@ namespace NTRIP
         
         #endregion
 
+        #region Events
+
+        public EventHandler<UnhandledExceptionEventArgs> UnhandledExceptionEvent;
+
+        #endregion
+
         #region ctor
 
         public CasterService(CasterSettings settings)
@@ -116,6 +122,16 @@ namespace NTRIP
             if (_listeningThread != null)
                 _listeningThread.Join(TimeSpan.FromSeconds(20.0));
 
+        }
+
+        #endregion
+
+        #region Protected Methods
+
+        protected void OnUnhandledException(Exception e)
+        {
+            if (UnhandledExceptionEvent != null)
+                UnhandledExceptionEvent.Invoke(this, new UnhandledExceptionEventArgs(e, false));
         }
 
         #endregion
@@ -251,7 +267,6 @@ namespace NTRIP
                                 string[] stringSplit = messageLines[0].Split(' ');
                                 if (stringSplit[0] == "Authorization:" && stringSplit[1] == "Basic")
                                 {
-                                    //TODO change user not correct
                                     byte[] userPassBytes = Convert.FromBase64String(stringSplit[2]);
                                     string[] userPass = Encoding.ASCII.GetString(userPassBytes).Split(':');
                                     if(userPass.Length != 2)
@@ -309,7 +324,7 @@ namespace NTRIP
             }
             catch (Exception e)
             {
-                //TODO create event for this exception
+                OnUnhandledException(e);
                 if (!_stopListening)
                     StartListening();
             }
