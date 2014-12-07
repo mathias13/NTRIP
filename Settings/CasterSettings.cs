@@ -5,6 +5,9 @@ namespace NTRIP.Settings
 {   
     public class CasterSettings : ConfigurationSection
     {
+        private static ConfigurationProperty _serverPassword =
+            new ConfigurationProperty("ServerPassword", typeof(String), String.Empty, ConfigurationPropertyOptions.IsRequired);
+
         private static ConfigurationProperty _portNumber =
             new ConfigurationProperty("PortNumber", typeof(Int32), 5000, ConfigurationPropertyOptions.IsRequired);
 
@@ -19,9 +22,17 @@ namespace NTRIP.Settings
 
         public CasterSettings()
         {
+            base.Properties.Add(_serverPassword);
             base.Properties.Add(_portNumber);
             base.Properties.Add(_ntripUsers);
             base.Properties.Add(_ntripMountPoints);
+        }
+
+        [ConfigurationProperty("ServerPassword", IsRequired = true)]
+        public string ServerPassword
+        {
+            get { return (string)this[_serverPassword]; }
+            set { this[_serverPassword] = value; }
         }
 
         [ConfigurationProperty("PortNumber", IsRequired = true)]

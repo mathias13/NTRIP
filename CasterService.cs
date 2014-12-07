@@ -30,7 +30,7 @@ namespace NTRIP
 
         private IDictionary<string, string> _users = new Dictionary<string, string>();
 
-        private string _casterPassword = "nolgardenCaster";
+        private string _casterPassword = String.Empty;
         
         #endregion
 
@@ -39,6 +39,8 @@ namespace NTRIP
         public CasterService(CasterSettings settings)
         {
             _tcpListener = new TcpListener(IPAddress.Any, settings.PortNumber);
+            _casterPassword = settings.ServerPassword;
+
             int i = 0;
             foreach(NTRIPMountPoint mountPoint in settings.NTRIPMountPoints)
             {
