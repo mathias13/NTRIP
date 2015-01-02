@@ -17,9 +17,6 @@ namespace NTRIP.Settings
         private static ConfigurationProperty _ntripMountPoint =
             new ConfigurationProperty("NTRIPMountPoint", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
 
-        private static ConfigurationProperty _localServers =
-            new ConfigurationProperty("LocalServers", typeof(LocalServerCollection), null, ConfigurationPropertyOptions.IsRequired);
-
         public ClientSettings()
         {
             base.Properties.Add(_ipOrHost);
@@ -54,13 +51,6 @@ namespace NTRIP.Settings
         {
             get { return (string)this[_ntripMountPoint]; }
             set { this[_ntripMountPoint] = value; }
-        }
-
-        [ConfigurationProperty("LocalServers", IsRequired = true)]
-        public LocalServerCollection LocalServers
-        {
-            get { return (LocalServerCollection)this[_localServers]; }
-            set { this[_localServers] = value; }
         }
     }
 }
