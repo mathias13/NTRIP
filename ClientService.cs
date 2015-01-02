@@ -47,6 +47,8 @@ namespace NTRIP
 
         private bool _connect = false;
 
+        private bool _disconnect = false;
+
         private string _mountPoint;
 
         private string _user;
@@ -196,6 +198,8 @@ namespace NTRIP
                                 }
 
                                 OnSourceTableReceived(mountPoints.ToArray());
+
+                                _serverConnectionAvailable = true;
                             }
                         }
                     }
@@ -261,6 +265,13 @@ namespace NTRIP
                 {
                     OnConnectionException(e, ConnectionFailure.UnhandledException);
                 }
+
+                if(_disconnect)
+                {
+                    _tcpClient.Close();
+                    _serverConnectionAvailable = false;
+                    _disconnect = false;
+                }
             }
         }
 
@@ -270,6 +281,8 @@ namespace NTRIP
 
         protected void OnConnectionException(Exception e, ConnectionFailure connectionFailure)
         {
+            _serverConnectionAvailable = false;
+
             if (ConnectionExceptionEvent != null)
                 ConnectionExceptionEvent.Invoke(this, new ConnectionExceptionArgs(e, connectionFailure));
         }
@@ -303,6 +316,17 @@ namespace NTRIP
             this.Connect();            
         }
         
+        public void Disconnect()
+        {
+            if (!_serverConnectionAvailable)
+            {
+                _disconnect = true;
+
+                while (_disconnect)
+                    Thread.Sleep(1);
+            }
+        }
+
         #endregion
 
         #region Public Properties
