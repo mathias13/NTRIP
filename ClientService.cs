@@ -39,7 +39,7 @@ namespace NTRIP
         
         private object _syncObject = new object();
 
-        private IPAddress _ipAdress;
+        private IPAddress _ipAdress = null;
 
         private int _tcpPort;
 
@@ -62,8 +62,7 @@ namespace NTRIP
         public ClientService(ClientSettings settings)
         {
             _tcpPort = settings.PortNumber;
-            IPAddress ipAdress = null;
-            if(!IPAddress.TryParse(settings.IPorHost, out ipAdress))
+            if(!IPAddress.TryParse(settings.IPorHost, out _ipAdress))
             {
                 IPHostEntry ipAdresses = Dns.GetHostEntry(settings.IPorHost);
                 if(ipAdresses.AddressList.Length < 1)
@@ -72,7 +71,6 @@ namespace NTRIP
                 _ipAdress = ipAdresses.AddressList[0];
             }
 
-            _ipAdress = ipAdress;
             _mountPoint = settings.NTRIPMountPoint;
             _user = settings.NTRIPUser.UserName;
             _password = settings.NTRIPUser.UserPassword;
