@@ -26,6 +26,7 @@ namespace NTRIP.Settings
             base.Properties.Add(_portNumber);
             base.Properties.Add(_ntripUsers);
             base.Properties.Add(_ntripMountPoints);
+            base.Properties.Add(_localServers);
         }
 
         [ConfigurationProperty("ServerPassword", IsRequired = true)]

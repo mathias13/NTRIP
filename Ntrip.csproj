@@ -44,10 +44,13 @@
     <Compile Include="ClientService.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Eventarguments\ConnectionExceptionArgs.cs" />
+    <Compile Include="Eventarguments\SourceTableArgs.cs" />
+    <Compile Include="Eventarguments\StreamReceivedArgs.cs" />
     <Compile Include="ILocalServer.cs" />
     <Compile Include="MountPoint.cs" />
     <Compile Include="NtripClientContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings\ClientSettings.cs" />
     <Compile Include="Settings\CasterSettings.cs" />
     <Compile Include="Settings\LocalServer.cs" />
     <Compile Include="Settings\LocalServerCollection.cs" />
