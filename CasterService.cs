@@ -186,8 +186,9 @@ namespace NTRIP
                                 {
                                     foreach (NtripClientContext client in _clients)
                                         if (client.ClientType == ClientType.NTRIP_Client)
-                                            if (client.MountPoint == _clients[i].MountPoint)
-                                                client.SendMessage(_clients[i].ByteStorage.ToArray());
+                                            if(!client.RemoveFlag)
+                                                if (client.MountPoint == _clients[i].MountPoint)
+                                                    client.SendMessage(_clients[i].ByteStorage.ToArray());
 
                                     _clients[i].ByteStorage.Clear();
                                 }
