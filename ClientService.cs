@@ -41,40 +41,22 @@ namespace NTRIP
 
         private IPAddress _ipAdress = null;
 
-        private int _tcpPort;
-
+        private ClientSettings _settings;
+        
         private bool _connect = false;
 
         private bool _tcpClientConnected = false;
 
         private bool _disconnect = false;
-
-        private string _mountPoint;
-
-        private string _user;
-
-        private string _password;
-
+        
         private int ALIVE_CHECK_TIMEOUT = 30;
 
         #endregion
 
         public ClientService(ClientSettings settings)
         {
-            _tcpPort = settings.PortNumber;
-            if(!IPAddress.TryParse(settings.IPorHost, out _ipAdress))
-            {
-                IPHostEntry ipAdresses = Dns.GetHostEntry(settings.IPorHost);
-                if(ipAdresses.AddressList.Length < 1)
-                    throw new Exception(String.Format("No valid ip found for: {0}", settings.IPorHost));
-                
-                _ipAdress = ipAdresses.AddressList[0];
-            }
-
-            _mountPoint = settings.NTRIPMountPoint;
-            _user = settings.NTRIPUser.UserName;
-            _password = settings.NTRIPUser.UserPassword;
-
+            _settings = settings;
+            
             _serverConnectionThread = new Thread(new ThreadStart(ServerConnectionThread));
             _serverConnectionThread.Start();
 
@@ -122,14 +104,34 @@ namespace NTRIP
                 if (_tcpClient == null)
                     _tcpClient = new TcpClient();
 
+                if (_ipAdress == null)
+                {
+                    if (!IPAddress.TryParse(_settings.IPorHost, out _ipAdress))
+                    {
+                        IPHostEntry ipAdresses;
+                        try
+                        {
+                            ipAdresses = Dns.GetHostEntry(_settings.IPorHost);
+                        }
+                        catch(SocketException e)
+                        {
+                            OnConnectionException(e, ConnectionFailure.NoInternetConnection);
+                            continue;
+                        }
+                        if (ipAdresses.AddressList.Length < 1)
+                            throw new Exception(String.Format("No valid ip found for: {0}", _settings.IPorHost));
+
+                        _ipAdress = ipAdresses.AddressList[0];
+                    }
+                }
                 try
                 {
                     if (!_tcpClientConnected)
-                        _tcpClient.Connect(_ipAdress, _tcpPort);
+                        _tcpClient.Connect(_ipAdress, _settings.PortNumber);
 
                     _tcpClientConnected = true;
 
-                    byte[] authBytes = Encoding.ASCII.GetBytes(String.Format("{0}:{1}", _user, _password));
+                    byte[] authBytes = Encoding.ASCII.GetBytes(String.Format("{0}:{1}", _settings.NTRIPUser.UserName, _settings.NTRIPUser.UserPassword));
                     string auth = Convert.ToBase64String(authBytes);
 
                     string msg = String.Format(
@@ -138,7 +140,7 @@ namespace NTRIP
                         + "Accept: */*{0}"
                         + "Connection: close{0}"
                         + "Authorization: Basic {2}{0}",
-                            Constants.CRLF, _mountPoint, auth);
+                            Constants.CRLF, _settings.NTRIPMountPoint, auth);
 
                     byte[] msgBytes = Encoding.ASCII.GetBytes(msg);
 
@@ -183,7 +185,7 @@ namespace NTRIP
                         }
                         else if (msgReturned.Contains(Constants.SOURCE200OK))
                         {
-                            if (_mountPoint != String.Empty)
+                            if (_settings.NTRIPMountPoint != String.Empty)
                                 OnConnectionException(null, ConnectionFailure.MountpointNotValid);
 
                             msgReturned = msgReturned.Replace(Constants.SOURCE200OK + Constants.CRLF, String.Empty);
@@ -272,7 +274,7 @@ namespace NTRIP
                         {
                             byte[] dataStream = new byte[bytesReceived];
                             Array.Copy(buffer, dataStream, bytesReceived);
-                            OnStreamDataReceived(dataStream, _mountPoint);
+                            OnStreamDataReceived(dataStream, _settings.NTRIPMountPoint);
                             aliveCheckTimeout = DateTime.Now.AddSeconds((double)ALIVE_CHECK_TIMEOUT);                            
                         }
                     }
@@ -319,7 +321,7 @@ namespace NTRIP
 
         public void Connect(string mounpoint)
         {
-            _mountPoint = mounpoint;
+            _settings.NTRIPMountPoint = mounpoint;
             this.Connect();            
         }
         
