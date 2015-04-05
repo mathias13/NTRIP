@@ -115,6 +115,7 @@ namespace NTRIP
                         }
                         catch(SocketException e)
                         {
+                            _connect = false;
                             OnConnectionException(e, ConnectionFailure.NoInternetConnection);
                             continue;
                         }
