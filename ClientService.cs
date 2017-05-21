@@ -65,6 +65,7 @@ namespace NTRIP
             if(!IPAddress.TryParse(settings.IPorHost, out _ipAdress))
             {
                 IPHostEntry ipAdresses = Dns.GetHostEntry(settings.IPorHost);
+                
                 if(ipAdresses.AddressList.Length < 1)
                     throw new Exception(String.Format("No valid ip found for: {0}", settings.IPorHost));
                 
@@ -220,6 +221,7 @@ namespace NTRIP
                 {
                     _connect = false;
                     _tcpClient.Close();
+                    _tcpClient = null;
                     _tcpClientConnected = false;
                     OnConnectionException(e, ConnectionFailure.UnhandledException);
                 }
