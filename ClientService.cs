@@ -267,7 +267,10 @@ namespace NTRIP
                         }
 
                         byte[] buffer = new byte[1024];
-                        int bytesReceived = _tcpClient.GetStream().Read(buffer, 0, buffer.Length);
+                        int bytesReceived = 0;
+                        NetworkStream stream = _tcpClient.GetStream();
+                        if(stream.DataAvailable)
+                            bytesReceived = stream.Read(buffer, 0, buffer.Length);
                         if (bytesReceived < 1)
                             Thread.Sleep(1);
                         else
