@@ -104,29 +104,20 @@ namespace NTRIP
                 if (_tcpClient == null)
                     _tcpClient = new TcpClient();
 
-                if (_ipAdress == null)
-                {
-                    if (!IPAddress.TryParse(_settings.IPorHost, out _ipAdress))
-                    {
-                        IPHostEntry ipAdresses;
-                        try
-                        {
-                            ipAdresses = Dns.GetHostEntry(_settings.IPorHost);
-                        }
-                        catch(SocketException e)
-                        {
-                            _connect = false;
-                            OnConnectionException(e, ConnectionFailure.NoInternetConnection);
-                            continue;
-                        }
-                        if (ipAdresses.AddressList.Length < 1)
-                            throw new Exception(String.Format("No valid ip found for: {0}", _settings.IPorHost));
-
-                        _ipAdress = ipAdresses.AddressList[0];
-                    }
-                }
                 try
                 {
+                    if (_ipAdress == null)
+                    {
+                        if (!IPAddress.TryParse(_settings.IPorHost, out _ipAdress))
+                        {
+                            IPHostEntry ipAdresses;
+                            ipAdresses = Dns.GetHostEntry(_settings.IPorHost);
+                            if (ipAdresses.AddressList.Length < 1)
+                                throw new Exception(String.Format("No valid ip found for: {0}", _settings.IPorHost));
+
+                            _ipAdress = ipAdresses.AddressList[0];
+                        }
+                    }
                     if (!_tcpClientConnected)
                         _tcpClient.Connect(_ipAdress, _settings.PortNumber);
 
@@ -219,14 +210,22 @@ namespace NTRIP
                         OnConnectionException(new Exception("Incomplete or no answer from Caster"), ConnectionFailure.NoAnswer);
                     }
                 }
+                catch (SocketException e)
+                {
+                    _connect = false;
+                    OnConnectionException(e, ConnectionFailure.NoInternetConnection);
+                    //Timeout if someone is reconnecting immediatly
+                    Thread.Sleep(1000);
+                }
                 catch (Exception e)
                 {
                     _connect = false;
                     _tcpClient.Close();
                     _tcpClientConnected = false;
                     OnConnectionException(e, ConnectionFailure.UnhandledException);
+                    //Timeout if someone is reconnecting immediatly
+                    Thread.Sleep(1000);
                 }
-                                
             }
         }
 
