@@ -5,10 +5,10 @@ namespace NTRIP.Settings
 {
     public class NTRIPUser : ConfigurationElement
     {
-        private static ConfigurationProperty _userName =
+        protected static ConfigurationProperty _userName =
             new ConfigurationProperty("UserName", typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
 
-        private static ConfigurationProperty _userPassword =
+        protected static ConfigurationProperty _userPassword =
             new ConfigurationProperty("UserPassword", typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
         
         public NTRIPUser()
@@ -27,12 +27,14 @@ namespace NTRIP.Settings
         public string UserName
         {
             get { return (string)this[_userName]; }
+            set { this[_userName] = value; }
         }
 
         [ConfigurationProperty("UserPassword", IsRequired = true)]
         public string UserPassword
         {
             get { return (string)this[_userPassword]; }
+            set { this[_userPassword] = value; }
         }    
     }
 }

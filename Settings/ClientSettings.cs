@@ -15,7 +15,7 @@ namespace NTRIP.Settings
             new ConfigurationProperty("NTRIPUser", typeof(NTRIPUser), null, ConfigurationPropertyOptions.IsRequired);
 
         private static ConfigurationProperty _ntripMountPoint =
-            new ConfigurationProperty("NTRIPMountPoint", typeof(string), null, ConfigurationPropertyOptions.IsRequired);
+            new ConfigurationProperty("NTRIPMountPoint", typeof(string), String.Empty, ConfigurationPropertyOptions.IsRequired);
 
         public ClientSettings()
         {
