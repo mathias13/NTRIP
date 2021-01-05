@@ -108,6 +108,7 @@ namespace NTRIP
         {
             _stopListening = false;
             _listeningThread = new Thread(new ThreadStart(WorkThread));
+            _listeningThread.Priority = ThreadPriority.Highest;
             _listeningThread.Start();
         }
 
@@ -200,14 +201,15 @@ namespace NTRIP
                             if (_clients[i].ByteStorage.Count < 1)
                                 continue;
                             string message = Encoding.ASCII.GetString(_clients[i].ByteStorage.ToArray());
-                            if (!message.EndsWith(Constants.CRLF))
-                                message = message.Substring(0, message.LastIndexOf(Constants.CRLF) + 4);
+                            int length = message.LastIndexOf(Constants.CRLF) + 2;
+                            if (length > 0)
+                            {
+                                message = message.Substring(0, length);
+                                messageLines.AddRange(message.Split(new string[] { Constants.CRLF }, int.MaxValue, StringSplitOptions.None));
+                                _clients[i].ByteStorage.RemoveRange(0, Encoding.ASCII.GetByteCount(message));
+                            }
 
-                            messageLines.AddRange(message.Split(new string[] { Constants.CRLF }, int.MaxValue, StringSplitOptions.None));
-
-                            _clients[i].ByteStorage.RemoveRange(0, Encoding.ASCII.GetByteCount(message));
-
-                            if (messageLines.Count < 1)
+                            if (messageLines.Count > 0)
                                 noActivity = false;
 
                             if (_clients[i].ClientType == ClientType.Unknown && messageLines.Count > 0)

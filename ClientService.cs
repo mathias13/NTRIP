@@ -61,6 +61,7 @@ namespace NTRIP
             _serverConnectionThread.Start();
 
             _serviceWorkThread = new Thread(new ThreadStart(ServiceWorkThread));
+            _serviceWorkThread.Priority = ThreadPriority.Highest;
             _serviceWorkThread.Start();
 
         }
@@ -87,7 +88,8 @@ namespace NTRIP
                 {
                     lock (_syncObject)
                     {
-                        _tcpClient.Close();
+                        if(_tcpClient != null)
+                            _tcpClient.Close();
                         _tcpClient = null;
                         _tcpClientConnected = false;
                         _serverConnectedAndStreaming = false;
