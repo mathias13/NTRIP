@@ -41,6 +41,8 @@ namespace NTRIP
 
         private IPAddress _ipAdress = null;
 
+        private int _tcpPort;
+
         private ClientSettings _settings;
         
         private bool _connect = false;
@@ -48,7 +50,13 @@ namespace NTRIP
         private bool _tcpClientConnected = false;
 
         private bool _disconnect = false;
-        
+
+        private string _mountPoint;
+
+        private string _user;
+
+        private string _password;
+
         private int ALIVE_CHECK_TIMEOUT = 30;
 
         #endregion
