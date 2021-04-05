@@ -41,6 +41,8 @@ namespace NTRIP
 
         private IPAddress _ipAdress = null;
 
+        private string _iPorHost = String.Empty;
+
         private int _tcpPort;
                 
         private bool _connect = false;
@@ -62,15 +64,7 @@ namespace NTRIP
         public ClientService(ClientSettings settings)
         {
             _tcpPort = settings.PortNumber;
-            if(!IPAddress.TryParse(settings.IPorHost, out _ipAdress))
-            {
-                IPHostEntry ipAdresses = Dns.GetHostEntry(settings.IPorHost);
-                
-                if(ipAdresses.AddressList.Length < 1)
-                    throw new Exception(String.Format("No valid ip found for: {0}", settings.IPorHost));
-                
-                _ipAdress = ipAdresses.AddressList[0];
-            }
+            _iPorHost = settings.IPorHost;
 
             _mountPoint = settings.NTRIPMountPoint;
             _user = settings.NTRIPUser.UserName;
@@ -98,6 +92,19 @@ namespace NTRIP
         }
 
         #region Thread Methods
+
+        private void CheckIpAdress()
+        {
+            if (!IPAddress.TryParse(_iPorHost, out _ipAdress))
+            {
+                IPHostEntry ipAdresses = Dns.GetHostEntry(_iPorHost);
+
+                if (ipAdresses.AddressList.Length < 1)
+                    throw new Exception(String.Format("No valid ip found for: {0}", _iPorHost));
+
+                _ipAdress = ipAdresses.AddressList[0];
+            }
+        }
 
         private void ServerConnectionThread()
         {
@@ -129,6 +136,7 @@ namespace NTRIP
 
                     try
                     {
+                        CheckIpAdress();
                         if (!_tcpClientConnected)
                             _tcpClient.Connect(_ipAdress, _tcpPort);
 
