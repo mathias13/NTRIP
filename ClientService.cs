@@ -141,7 +141,7 @@ namespace NTRIP
                             _tcpClient.Connect(_ipAdress, _tcpPort);
 
                         NetworkStream stream = _tcpClient.GetStream();
-                        stream.ReadTimeout = 2000;
+                        stream.ReadTimeout = 5000;
                         _tcpClientConnected = true;
 
                         byte[] authBytes = Encoding.ASCII.GetBytes(String.Format("{0}:{1}", _user, _password));

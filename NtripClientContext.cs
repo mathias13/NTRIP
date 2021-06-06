@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
@@ -118,8 +119,13 @@ namespace NTRIP
         public void SendMessage(byte[] bytes)
         {
             try
-            {
+            {                
                 _tcpClient.GetStream().Write(bytes, 0, bytes.Length);
+            }
+            catch(IOException)
+            {
+                if (!_tcpClient.Connected)
+                    _removeFlag = true;
             }
             catch(Exception e)
             {

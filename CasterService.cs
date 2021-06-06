@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Threading;
 using System.Text;
+using System.Runtime.Remoting.Messaging;
 
 namespace NTRIP
 {
@@ -150,10 +151,10 @@ namespace NTRIP
 
         private void WorkThread()
         {
-            try
+            _tcpListener.Start();
+            while (!_stopListening)
             {
-                _tcpListener.Start();
-                while (!_stopListening)
+                try
                 {
                     if (_tcpListener.Pending())
                         _clients.Add(new NtripClientContext(_tcpListener.AcceptTcpClient()));
@@ -294,6 +295,7 @@ namespace NTRIP
                                     {
                                         _clients[i].ValidUser = true;
                                         _clients[i].SendMessage(Encoding.ASCII.GetBytes(Constants.ICY200OK + Constants.CRLF));
+                                        
                                     }
                                 }
                                 else
@@ -321,16 +323,14 @@ namespace NTRIP
                         Thread.Sleep(1);
 
                 }
-                _tcpListener.Stop();
-                foreach (NtripClientContext client in _clients)
-                    client.Dispose();
+                catch (Exception e)
+                {
+                    OnUnhandledException(e);
+                }
             }
-            catch (Exception e)
-            {
-                OnUnhandledException(e);
-                if (!_stopListening)
-                    StartListening();
-            }
+            _tcpListener.Stop();
+            foreach (NtripClientContext client in _clients)
+                client.Dispose();
         }
 
         private string GenerateSourceTable()
