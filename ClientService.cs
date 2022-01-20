@@ -102,7 +102,9 @@ namespace NTRIP
                 if (ipAdresses.AddressList.Length < 1)
                     throw new Exception(String.Format("No valid ip found for: {0}", _iPorHost));
 
-                _ipAdress = ipAdresses.AddressList[0];
+                foreach(IPAddress address in ipAdresses.AddressList)
+                    if (address.AddressFamily == AddressFamily.InterNetwork)
+                        _ipAdress = address;
             }
         }
 
